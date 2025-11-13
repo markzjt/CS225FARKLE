@@ -257,12 +257,14 @@ private:
                 int numSelected = 0; 
                 stringstream stream(input);
                 int diceNum;
+                int indicesToKeep[6];
                 while (stream >> diceNum) {
                     if (diceNum >= 1 && diceNum <= 6) {
                         int index = diceNum - 1;  
                         // Only select dice that haven't been kept already
                         if (gameDice.keptDice[index] == false) {
                             selectedDice[numSelected] = allDice[index];
+                            indicesToKeep[numSelected] = index;
                             numSelected++;
                         }
                     }
@@ -285,16 +287,12 @@ private:
                 int selectionScore = rules.calculateScore(selectedDice, numSelected);
                 turnScore += selectionScore;
                 cout << "Scored " << selectionScore << " points!\n";
-                
-                // Mark dice as kept 
-                stringstream streamTwo(input);
-                while (streamTwo >> diceNum) {
-                    if (diceNum >= 1 && diceNum <= 6) {
-                        int index = diceNum - 1;
-                        gameDice.keepDie(index);
-                    }
+
+                // Mark the dice as kept
+                for (int i = 0; i < numSelected; i++) {
+                    gameDice.keepDie(indicesToKeep[i]);
                 }
-                
+
                 // Check if all dice are kept 
                 if (gameDice.getNumAvailable() == 0) {
                     cout << "\nAll dice scored!\n";
@@ -603,4 +601,5 @@ int main() {
     }
     
     return 0;
+
 }
