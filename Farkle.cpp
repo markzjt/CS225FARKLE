@@ -1,7 +1,16 @@
-// Sources of help: 
-    // Searched via google "best way to parse a string into an array of ints" and google
-    // ai overview suggested parsing into array of primative types using <sstream> 
-    // which i implemented for parsing during the user selection of dice to keep
+/*************************************************************************************************** 
+Name: John Markham
+Purpose: Satisfy the requirements of CS225 Group Project
+Description: Farkle in C++ wiht a Terminator twist 
+Sources of help: 
+    - Searched via google "best way to parse a string into an array of ints" and google
+      ai overview suggested parsing into array of primative types using <sstream> 
+      which i implemented for parsing during the user selection of dice to keep
+    - https://mermaid.js.org/syntax/classDiagram.html used tutorial for making UML class diagram
+    - Claude.ai debugging caught a logical bug where saveGame was only being called once the
+      gameplay ended. I used this feedback to make an additional call between rounds and add 
+      forward declarations before the Game class so gamestate is saved every time a turn is completed.
+****************************************************************************************************/
 
 #include <iostream>
 #include <string>
@@ -10,6 +19,7 @@
 #include <ctime>
 #include <sstream>
 #include "ScoringRules.h"
+#include "TestFunction.h"
 using namespace std;
 
 // Single Die Class
@@ -152,6 +162,10 @@ public:
     }
 };
 
+// Declare save for use in Game class
+class Game;
+void saveGame(Game& game);
+
 // Game Class
 class Game {
 private:
@@ -162,7 +176,6 @@ private:
     bool isUsersTurn;
     const int targetScore = 10000;  
     bool gameOver;
-    
     // Skynet taunts the user array
     string skynetTaunts[5] = {
         "I'll be back... for more points.",
@@ -264,7 +277,7 @@ private:
                         // Only select dice that haven't been kept already
                         if (gameDice.keptDice[index] == false) {
                             selectedDice[numSelected] = allDice[index];
-                            indicesToKeep[numSelected] = index;
+                            indicesToKeep[numSelected] =  index;
                             numSelected++;
                         }
                     }
@@ -292,7 +305,7 @@ private:
                 for (int i = 0; i < numSelected; i++) {
                     gameDice.keepDie(indicesToKeep[i]);
                 }
-
+                
                 // Check if all dice are kept 
                 if (gameDice.getNumAvailable() == 0) {
                     cout << "\nAll dice scored!\n";
@@ -493,6 +506,9 @@ public:
                 playSkynetTurn();
                 isUsersTurn = true;
             }
+
+            saveGame(*this);
+
             if (checkForWinner() == true) {
                 break;
             }
@@ -570,9 +586,11 @@ void loadGame(Game& game) {
     }
 }
 
+
 int main() {
     // Seed random number
     srand(time(NULL));
+    // testAllScoringCombos();
     cout << "Welcome to FARKLE: Judgment Day Edition\n";
     cout << "========================================\n\n";
 
@@ -590,7 +608,7 @@ int main() {
         needsSetup = false;       
     }
     
-    // Start the the game
+    // Start the game
     farkleGame.start(needsSetup);
     
     // Ask to save at the end
@@ -601,5 +619,4 @@ int main() {
     }
     
     return 0;
-
 }
