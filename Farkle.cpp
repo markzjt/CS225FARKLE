@@ -346,65 +346,63 @@ private:
     
     // Play skynet turn
     void playSkynetTurn() {
-        int turnScore = 0;
-        bool nextTurn = false;
-        cout << "\n--- Skynet's Turn ---\n"; 
-        // Display random Skynet taunt
-        int randomTaunt = rand() % 5;  
-        cout << "Skynet: \"" << skynetTaunts[randomTaunt] << "\"\n\n";   
-        gameDice.resetDice();        
-        while (nextTurn == false) {
-            // Roll available dice
-            gameDice.rollAvailable();
-            // Build array of available dice for Farkle check
-            Die* allDice = gameDice.getAllDice();
-            int availableCount = 0;
-            Die availableDice[6];
-            for (int i = 0; i < 6; i++) {
-                if (gameDice.keptDice[i] == false) {
-                    availableDice[availableCount] = allDice[i];
-                    availableCount++;
-                }
-            }
-            // Check if Farkle
-            if (rules.isFarkle(availableDice, availableCount) == true) {
-                cout << "Skynet FARKLED! No points this turn.\n";
-                turnScore = 0;
-                nextTurn = true;
-                break;
-            }
-            // Computer selects all scoring dice
-            Die selectedDice[6];
-            int numSelected = 0;
-            for (int i = 0; i < 6; i++) {
-                if (gameDice.keptDice[i] == false) {
-                    selectedDice[numSelected] = allDice[i];
-                    numSelected++;
-                    gameDice.keepDie(i);
-                }
-            }
-
-            int selectionScore = rules.calculateScore(selectedDice, numSelected);
-            turnScore += selectionScore;
-
-            // Check if all dice are kept 
-            if (gameDice.getNumAvailable() == 0) {
-                gameDice.resetDice();
-            }
-            
-            // Decide whether to continue 
-            if (skynetRollDecision(turnScore, gameDice.getNumAvailable()) == false) {
-                nextTurn = true;
-            }
+    int turnScore = 0;
+    bool nextTurn = false;
+    cout << "\n--- Skynet's Turn ---\n";
+    int randomTaunt = rand() % 5;
+    cout << "Skynet: \"" << skynetTaunts[randomTaunt] << "\"" << endl;
+    int diceRemaining = 6;
+    while (nextTurn == false) {
+        int roll = rand() % 100;
+        int rollScore = 0;
+        int diceUsed = 0;
+        if (roll < 15) {
+            cout << "Skynet FARKLED! No points this turn.\n";
+            turnScore = 0;
+            nextTurn = true;
+            break;
+        } else if (roll < 35) {
+            rollScore = 50;
+            diceUsed = 1;
+        } else if (roll < 55) {
+            rollScore = 100;
+            diceUsed = 1;
+        } else if (roll < 70) {
+            rollScore = 150 + (rand() % 2) * 50;
+            diceUsed = 2;
+        } else if (roll < 85) {
+            rollScore = 200 + (rand() % 5) * 100;
+            diceUsed = 3;
+        } else if (roll < 93) {
+            rollScore = 1000 + (rand() % 2) * 1000;
+            diceUsed = rand() % 2 + 4;
+        } else {
+            int special = rand() % 3;
+            if (special == 0) rollScore = 1500;
+            else if (special == 1) rollScore = 2500;
+            else rollScore = 3000;
+            diceUsed = 6;
         }
-        
-        // Add turn score to total and display result
-        if (turnScore > 0) {
-            skynet.addPoints(turnScore);
-            cout << "Skynet scored " << turnScore << " points. New total: " << skynet.getTotalScore() << endl;
+
+        turnScore += rollScore;
+        diceRemaining -= diceUsed;
+
+        // Reset dice if all used
+        if (diceRemaining == 0) {
+            diceRemaining = 6;
+        }
+
+        // Decide whether to continue
+        if (!skynetRollDecision(turnScore, diceRemaining)) {
+            nextTurn = true;
         }
     }
-    
+
+    if (turnScore > 0) {
+        skynet.addPoints(turnScore);
+        cout << "Skynet scored " << turnScore << " points. New total: " << skynet.getTotalScore() << endl;
+    }
+}
 public:
     // Constructor
     Game() : user("User"), skynet("Skynet") {
